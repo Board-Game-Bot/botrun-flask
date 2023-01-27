@@ -1,4 +1,4 @@
-from compiler import config
+from pkg.compiler import config
 import os
 import subprocess
 
