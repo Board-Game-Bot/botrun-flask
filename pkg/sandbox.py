@@ -114,7 +114,7 @@ class SandBox:
   
   # 运行并返回结果
   def run(self):
-    run_command = self.config['run_command'].format(target=self.path_target, data=self.path_data)
+    run_command = self.config['run_command'].format(code=self.path_code, target=self.path_target, data=self.path_data)
     command = 'docker exec %s /bin/sh -c "timeout %d %s"' % (self.id_container, self.config['time_limit'] / 1000, run_command)
     try:
       result = SandBox._exec(command, True)

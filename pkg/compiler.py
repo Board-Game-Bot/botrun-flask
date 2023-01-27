@@ -13,7 +13,7 @@ config = {
     "time_limit": 3000,
     "memory_limit": 256,
     "compile_command": None,
-    "run_command": "python3 {target} < {data}",
+    "run_command": "python3 {code} < {data}",
   },
   "java": {
     "suffix": "java",
@@ -29,7 +29,7 @@ config = {
     "time_limit": 3000,
     "memory_limit": 256,
     "compile_command": None,
-    "run_command": "node /{target} < {data}",
+    "run_command": "node /{code} < {data}",
   },
   "go": {
     "suffix": "go",
