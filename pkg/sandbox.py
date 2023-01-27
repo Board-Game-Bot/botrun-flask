@@ -2,12 +2,12 @@ from pkg.compiler import config
 import os
 import subprocess
 
-debug = False
+debug = True
 
 class SandBox:
 
   bots = dict()
-  cwd = "/"
+  cwd = ""
 
   @staticmethod
   def _get_local_images():
@@ -18,25 +18,31 @@ class SandBox:
       raise RuntimeError("Get local images failed")
     
     images = []
-    for line in result.split('\n')[1:]:
-      repo, tag, id, *time, size = line.split() 
+    list_row = result.split('\n')
+    for line in list_row[1: ]:
+      line = line.split()
+      if len(line) < 7:
+        continue
       images.append({
-        'repo': repo,
-        'tag': tag,
-        'id': id,
-        'time': ''.join(time),
-        'size': size,
+        'repo': line[0],
+        'tag': line[1],
+        'id': line[2],
+        'time': ' '.join(line[3:6]),
+        'size': line[-1],
       })
 
     return images
   
   @staticmethod
-  def _exec(cmd) -> str:
+  def _exec(cmd, is_run=False) -> str:
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, encoding='utf-8')
+    
     if p.returncode != 0:
+      if debug:
+        print(p.stderr)
       raise RuntimeError("Execute failed")
     
-    if p.stdout == None or len(p.stdout) == 0:
+    if is_run and (p.stdout == None or len(p.stdout) == 0):
       raise RuntimeError("TLE or empty output")
    
     return p.stdout
@@ -47,8 +53,8 @@ class SandBox:
     self.config = config[lang]
 
     self.path_code = "%scode-%s.%s" % (SandBox.cwd, self.uuid, self.config['suffix'])
-    self.path_target = "%sprog-%s.%s" % (SandBox.cwd, self.uuid, self.config['suffix'])
-    self.path_data = "%sdata-%s.%s" % (SandBox.cwd, self.uuid, self.config['suffix'])
+    self.path_target = "%sprog-%s" % (SandBox.cwd, self.uuid)
+    self.path_data = "%sdata-%s" % (SandBox.cwd, self.uuid)
     
     self.id_container = None
     self.proc = None
@@ -64,6 +70,7 @@ class SandBox:
     images_local = SandBox._get_local_images()
     images_to_use = self.config['images']
     images_available = filter(lambda x: x['repo'] in images_to_use, images_local)
+
     image = ""
     if images_available is not None:
       image = max(images_available, key=lambda x: x['tag'])
@@ -86,7 +93,7 @@ class SandBox:
       return "ok"
     
     compile_command = self.config['compile_command'].format(code=self.path_code, target=self.path_target)
-    command = 'docker exec %s /bin/bash -c "%s"' % (self.id_container, compile_command)
+    command = 'docker exec %s %s' % (self.id_container, compile_command)
     try:
       SandBox._exec(command)
       self._update_container()
@@ -108,9 +115,9 @@ class SandBox:
   # 运行并返回结果
   def run(self):
     run_command = self.config['run_command'].format(target=self.path_target, data=self.path_data)
-    command = 'docker exec %s /bin/bash -c "timeout %d %s"' % (self.id_container, self.config['time_limit'] / 1000, run_command)
+    command = 'docker exec %s /bin/sh -c "timeout %d %s"' % (self.id_container, self.config['time_limit'] / 1000, run_command)
     try:
-      result = SandBox._exec(command)
+      result = SandBox._exec(command, True)
     except RuntimeError as reason:
       return str(reason)
     
@@ -140,7 +147,7 @@ class SandBox:
     file_code.write(self.code)
     file_code.close()
     
-    command = "docker cp %s %s:%s" % (self.path_code, self.id_container, self.path_code)
+    command = "docker cp %s %s:/" % (self.path_code, self.id_container)
     try:
       SandBox._exec(command)
     except RuntimeError:
@@ -154,7 +161,7 @@ class SandBox:
     file_data.write(data)
     file_data.close()
 
-    command = "docker cp %s %s:%s" % (self.path_data, self.id_container, self.path_data)
+    command = "docker cp %s %s:/" % (self.path_data, self.id_container)
     try:
       SandBox._exec(command)
     except RuntimeError:
