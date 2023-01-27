@@ -7,20 +7,20 @@ app = Flask(__name__)
 def hello_flask():
   return "<p>Hello Flask</p>"
 
-@app.route("/api/runbot/start", methods=['POST'])
+@app.route("/api/runbot/start/", methods=['POST'])
 def start():
   uuid = request.form["uuid"]
   code = request.form["code"]
   lang = request.form["lang"]
   
-  if SandBox.bots.get(uuid) == None:
+  if SandBox.bots.get(uuid) is None:
     SandBox.bots[uuid] = SandBox(uuid, code, lang)
 
   return jsonify({
     'result': 'ok'
   })
 
-@app.route("/api/runbot/compile", methods=['POST'])
+@app.route("/api/runbot/compile/", methods=['POST'])
 def compile():
   uuid = request.form['uuid']
   sandbox = SandBox.bots.get(uuid)
@@ -35,7 +35,7 @@ def compile():
     'result': result
   })
 
-@app.route("/api/runbot/prepare", methods=['POST'])
+@app.route("/api/runbot/prepare/", methods=['POST'])
 def prepare():
   uuid = request.form['uuid']
   data = request.form['data']
@@ -51,7 +51,7 @@ def prepare():
     'result': result
   })
 
-@app.route("/api/runbot/run", methods=['POST'])
+@app.route("/api/runbot/run/", methods=['POST'])
 def run():
   uuid = request.form['uuid']
   sandbox = SandBox.bots.get(uuid)
@@ -66,7 +66,7 @@ def run():
       'data': data
   })
 
-@app.route("/api/runbot/stop", methods=['POST'])
+@app.route("/api/runbot/stop/", methods=['POST'])
 def stop():
   uuid = request.form['uuid']
   sandbox = SandBox.bots.get(uuid)
