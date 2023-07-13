@@ -14,6 +14,10 @@ Board Bot Game 运行用户代码需要做到两点：**支持多语言**，**�
 
 本项目当前比较简单，因此只需要列出所有的需要的功能即可。
 
+## 技术栈
+
+<img src="https://skillicons.dev/icons?i=python,flask,docker" width="25%">
+
 这里的**输入/输出**，均为一般网络请求的**请求/响应**。
 
 ## 功能
